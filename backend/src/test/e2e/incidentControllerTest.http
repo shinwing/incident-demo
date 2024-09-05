@@ -1,0 +1,431 @@
+### get incidents from empty database
+GET {{url}}/api/backend/incidents?page=1&pageSize=10
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incidents", function() {
+        try {
+            var responseBodyString = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            var body = JSON.parse(responseBodyString);
+
+            client.assert(body.items !== undefined, "Response body does not contain 'items'");
+            client.assert(Array.isArray(body.items), "'items' is not an array");
+            client.assert(body.totalCount === 0, "'totalCount' is not 0");
+        } catch (error) {
+            client.assert(false, "Failed to parse JSON: " + error.message);
+        }
+    });
+%}
+
+### create incident for priority error
+POST {{url}}/api/backend/incidents
+Content-Type: application/json
+
+{
+    "token": "token1",
+    "title": "Incident 1",
+    "description": "Description 1",
+    "incidentType": "INCIDENT",
+    "incidentSubType": "INCIDENT_SUBTYPE",
+    "priority": "high",
+    "createdBy": "user1"
+}
+
+> {%
+    client.test("Status code is 201", function() {
+        client.assert(response.status === 400, "Expected status code 400, but got " + response.status);
+    });
+%}
+
+### create incident
+POST {{url}}/api/backend/incidents
+Content-Type: application/json
+
+{
+  "token": "token",
+  "title": "Incident 1",
+  "description": "Description 1",
+  "incidentType": "INCIDENT",
+  "incidentSubType": "INCIDENT_SUBTYPE",
+  "priority": "HIGH",
+  "createdBy": "user1"
+}
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incident", function() {
+        client.assert(response.body == "1", "Response body does not contain id");
+    });
+%}
+
+### create incident with repeated token
+POST {{url}}/api/backend/incidents
+Content-Type: application/json
+
+{
+  "token": "token",
+  "title": "Incident 1",
+  "description": "Description 1",
+  "incidentType": "INCIDENT",
+  "incidentSubType": "INCIDENT_SUBTYPE",
+  "priority": "HIGH",
+  "createdBy": "user1"
+}
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incident", function() {
+        client.assert(response.body == "1", "Response body does not contain id");
+    });
+%}
+
+### get incidents
+GET {{url}}/api/backend/incidents?page=1&pageSize=10
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incidents", function() {
+        try {
+            var responseBodyString = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            var body = JSON.parse(responseBodyString);
+
+            client.assert(body.items !== undefined, "Response body does not contain 'items'");
+            client.assert(Array.isArray(body.items), "'items' is not an array");
+            client.assert(body.totalCount === 1, "'totalCount' is not 0");
+        } catch (error) {
+            client.assert(false, "Failed to parse JSON: " + error.message);
+        }
+    });
+%}
+
+### get incident by id
+GET {{url}}/api/backend/incidents/1
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incidents", function() {
+        try {
+            var responseBodyString = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            var body = JSON.parse(responseBodyString);
+
+            client.assert(body.id == "1", "Response incident id is not 1");
+            client.assert(body.priority == "HIGH", "Response incident priority is not HIGH");
+        } catch (error) {
+            client.assert(false, "Failed to parse JSON: " + error.message);
+        }
+    });
+%}
+
+### update incident priority
+PUT {{url}}/api/backend/incidents
+Content-Type: application/json
+
+{
+  "id": 1,
+  "priority": "MEDIUM"
+}
+
+### get incident by id and check priority is updated
+GET {{url}}/api/backend/incidents/1
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incidents", function() {
+        try {
+            var responseBodyString = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            var body = JSON.parse(responseBodyString);
+
+            client.assert(body.id == "1", "Response incident id is not 1");
+            client.assert(body.priority == "MEDIUM", "Response incident priority is not MEDIUM");
+        } catch (error) {
+            client.assert(false, "Failed to parse JSON: " + error.message);
+        }
+    });
+%}
+
+### update incident status
+PUT {{url}}/api/backend/incidents
+Content-Type: application/json
+
+{
+  "id": 1,
+  "status": "CLOSED"
+}
+
+### get incident by id and check status is updated
+GET {{url}}/api/backend/incidents/1
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incidents", function() {
+        try {
+            var responseBodyString = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            var body = JSON.parse(responseBodyString);
+
+            client.assert(body.id == "1", "Response incident id is not 1");
+            client.assert(body.priority == "MEDIUM", "Response incident priority is not MEDIUM");
+            client.assert(body.status == "CLOSED", "Response incident status is not CLOSED");
+            client.assert(body.title == "Incident 1", "Response incident title is not Incident 1");
+        } catch (error) {
+            client.assert(false, "Failed to parse JSON: " + error.message);
+        }
+    });
+%}
+
+### update incident title
+PUT {{url}}/api/backend/incidents
+Content-Type: application/json
+
+{
+  "id": 1,
+  "token": "token 2",
+  "createdBy": "null",
+  "title": "Incident 2",
+  "description": "description 2"
+}
+
+### get incident by id and check title and description is updated and token and createdBy is not updated
+GET {{url}}/api/backend/incidents/1
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incidents", function() {
+        try {
+            var responseBodyString = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            var body = JSON.parse(responseBodyString);
+
+            client.assert(body.id == "1", "Response incident id is not 1");
+            client.assert(body.priority == "MEDIUM", "Response incident priority is not MEDIUM");
+            client.assert(body.status == "CLOSED", "Response incident status is not CLOSED");
+            client.assert(body.title == "Incident 2", "Response incident title is not Incident 2");
+            client.assert(body.description == "description 2", "Response incident title is not description 2");
+            client.assert(body.token == "token", "Response incident token is not token");
+            client.assert(body.createdBy == "user1", "Response incident createdBy is not user1");
+        } catch (error) {
+            client.assert(false, "Failed to parse JSON: " + error.message);
+        }
+    });
+%}
+
+### create incidents 02
+POST {{url}}/api/backend/incidents
+Content-Type: application/json
+
+{
+  "token": "token 2",
+  "title": "Incident 2",
+  "description": "Description 2",
+  "incidentType": "INCIDENT",
+  "incidentSubType": "INCIDENT_SUBTYPE",
+  "priority": "MEDIUM",
+  "createdBy": "user1"
+}
+
+### create incidents 03
+POST {{url}}/api/backend/incidents
+Content-Type: application/json
+
+{
+  "token": "token 3",
+  "title": "Incident 3",
+  "description": "Description 3",
+  "incidentType": "INCIDENT",
+  "incidentSubType": "INCIDENT_SUBTYPE",
+  "priority": "MEDIUM",
+  "createdBy": "user1"
+}
+
+### create incidents 04
+POST {{url}}/api/backend/incidents
+Content-Type: application/json
+
+{
+  "token": "token 4",
+  "title": "Incident 4",
+  "description": "Description 4",
+  "incidentType": "INCIDENT_4",
+  "incidentSubType": "INCIDENT_SUBTYPE_4",
+  "priority": "LOW",
+  "createdBy": "user1"
+}
+
+### get incidents with page 2 and pageSize 2
+GET {{url}}/api/backend/incidents?page=2&pageSize=2
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incidents", function() {
+        try {
+            var responseBodyString = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            var body = JSON.parse(responseBodyString);
+
+            client.assert(body.items !== undefined, "Response body does not contain 'items'");
+            client.assert(Array.isArray(body.items), "'items' is not an array");
+            client.assert(body.items[0].id == 3, "item[0] id is not 3");
+            client.assert(body.totalCount === 4, "'totalCount' is not 0");
+        } catch (error) {
+            client.assert(false, "Failed to parse JSON: " + error.message);
+        }
+    });
+%}
+
+### delete incident by id
+DELETE {{url}}/api/backend/incidents/1
+
+### get incidents with page 2 and pageSize 2
+GET {{url}}/api/backend/incidents?page=2&pageSize=2
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incidents", function() {
+        try {
+            var responseBodyString = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            var body = JSON.parse(responseBodyString);
+
+            client.assert(body.items !== undefined, "Response body does not contain 'items'");
+            client.assert(Array.isArray(body.items), "'items' is not an array");
+            client.assert(body.items[0].id == 4, "item[0] id is not 4");
+            client.assert(body.totalCount === 3, "'totalCount' is not 0");
+        } catch (error) {
+            client.assert(false, "Failed to parse JSON: " + error.message);
+        }
+    });
+%}
+
+### can not get incident by id
+GET {{url}}/api/backend/incidents/1
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incidents", function() {
+        try {
+            var responseBodyString = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            var body = JSON.parse(responseBodyString);
+
+            client.assert(body.id == "1", "Response incident id is not 1");
+            client.assert(body.deletedAt !== "", "Response incident deletedAt is not null");
+        } catch (error) {
+            client.assert(false, "Failed to parse JSON: " + error.message);
+        }
+    });
+%}
+
+### update incident status
+PUT {{url}}/api/backend/incidents
+Content-Type: application/json
+
+{
+  "id": 2,
+  "status": "CLOSED"
+}
+
+### update incident status
+PUT {{url}}/api/backend/incidents
+Content-Type: application/json
+
+{
+  "id": 3,
+  "status": "IN_PROGRESS"
+}
+
+### get incidents with status CLOSED
+GET {{url}}/api/backend/incidents?page=1&pageSize=10&status=CLOSED
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incidents", function() {
+        try {
+            var responseBodyString = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            var body = JSON.parse(responseBodyString);
+
+            client.assert(body.items !== undefined, "Response body does not contain 'items'");
+            client.assert(Array.isArray(body.items), "'items' is not an array");
+            client.assert(body.items[0].id == 2, "item[0] id is not 2");
+            client.assert(body.totalCount === 1, "'totalCount' is not 0");
+        } catch (error) {
+            client.assert(false, "Failed to parse JSON: " + error.message);
+        }
+    });
+%}
+
+### get incidents with type
+GET {{url}}/api/backend/incidents?page=1&pageSize=10&type=INCIDENT_4
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incidents", function() {
+        try {
+            var responseBodyString = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            var body = JSON.parse(responseBodyString);
+
+            client.assert(body.items !== undefined, "Response body does not contain 'items'");
+            client.assert(Array.isArray(body.items), "'items' is not an array");
+            client.assert(body.items[0].id == 4, "item[0] id is not 4");
+            client.assert(body.totalCount === 1, "'totalCount' is not 0");
+        } catch (error) {
+            client.assert(false, "Failed to parse JSON: " + error.message);
+        }
+    });
+%}
+
+### get incidents with sub type
+GET {{url}}/api/backend/incidents?page=1&pageSize=10&subType=INCIDENT_SUBTYPE_4
+
+> {%
+    client.test("Status code is 200", function() {
+        client.assert(response.status === 200, "Expected status code 200, but got " + response.status);
+    });
+
+    client.test("Response contains incidents", function() {
+        try {
+            var responseBodyString = typeof response.body === 'string' ? response.body : JSON.stringify(response.body);
+            var body = JSON.parse(responseBodyString);
+
+            client.assert(body.items !== undefined, "Response body does not contain 'items'");
+            client.assert(Array.isArray(body.items), "'items' is not an array");
+            client.assert(body.items[0].id == 4, "item[0] id is not 4");
+            client.assert(body.totalCount === 1, "'totalCount' is not 0");
+        } catch (error) {
+            client.assert(false, "Failed to parse JSON: " + error.message);
+        }
+    });
+%}
